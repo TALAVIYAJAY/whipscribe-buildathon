@@ -291,6 +291,7 @@ export default function HomePage() {
         {!intelligence && (
           <SampleScenarios
             onSelectSample={handleProcessFile}
+            onSubmitUrl={handleProcessUrl}
             isLoading={isLoading}
           />
         )}
