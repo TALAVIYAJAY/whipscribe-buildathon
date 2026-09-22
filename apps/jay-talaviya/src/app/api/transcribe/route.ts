@@ -128,11 +128,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // If an uploaded file, query WhipScribe for hosted playback URL
+    // Ensure streamable playback URL: query WhipScribe for hosted playback URL or normalize Google Drive stream
     if (!originalAudioUrl) {
       const hostedUrl = await client.getAudioUrl(jobId);
       if (hostedUrl) {
         originalAudioUrl = hostedUrl;
+      }
+    } else {
+      const gdriveId = extractGoogleDriveId(originalAudioUrl);
+      if (gdriveId) {
+        const hostedUrl = await client.getAudioUrl(jobId);
+        originalAudioUrl = hostedUrl || `https://drive.google.com/uc?export=download&id=${gdriveId}`;
       }
     }
 
