@@ -28,6 +28,7 @@ export interface DemoItem {
   icon: React.ElementType;
   badgeColor: string;
   tags: string[];
+  googleDriveUrl?: string;
 }
 
 export const DIRECT_UPLOAD_ITEMS: DemoItem[] = [
@@ -93,6 +94,7 @@ export const GDRIVE_ITEMS: DemoItem[] = [
     icon: Users,
     badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
     tags: ["Google Drive", "Compliance", "Roadmap"],
+    googleDriveUrl: "https://drive.google.com/file/d/1JUrBZBmRpqbEen1fQo9wnYjohZO1HK5V/view?usp=drive_link",
   },
   {
     id: "gdrive-onboarding",
@@ -108,6 +110,7 @@ export const GDRIVE_ITEMS: DemoItem[] = [
     icon: Target,
     badgeColor: "bg-cyan-100 text-cyan-800 border-cyan-200",
     tags: ["Google Drive", "Support Automation", "Client Onboarding"],
+    googleDriveUrl: "https://drive.google.com/file/d/10foMFl8LYYOFB89zQFOvYw5-2O6JjbEz/view?usp=drive_link",
   },
   {
     id: "gdrive-founder",
@@ -123,6 +126,7 @@ export const GDRIVE_ITEMS: DemoItem[] = [
     icon: TrendingUp,
     badgeColor: "bg-rose-100 text-rose-800 border-rose-200",
     tags: ["Google Drive", "All-Hands", "Product Launch"],
+    googleDriveUrl: "https://drive.google.com/file/d/1_S2v042N0dLhU98xJvDjpopM4LX1xvoa/view?usp=drive_link",
   },
 ];
 
@@ -171,21 +175,21 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
   };
 
   const handleRunGdrive = async (item: DemoItem) => {
-    // Check if a specific Google Drive link has been configured for this format
-    const customLink =
-      item.format === "wav"
+    const link =
+      item.googleDriveUrl ||
+      (item.format === "wav"
         ? googleDriveLinks.wavUrl
         : item.format === "mp3"
         ? googleDriveLinks.mp3Url
-        : googleDriveLinks.mp4Url;
+        : googleDriveLinks.mp4Url);
 
-    if (customLink && onSubmitUrl) {
+    if (link && onSubmitUrl) {
       window.scrollTo({ top: 120, behavior: "smooth" });
-      onSubmitUrl(customLink);
+      onSubmitUrl(link);
       return;
     }
 
-    // Fallback: load file and process through pipeline
+    // Fallback: load file directly and process through pipeline
     await handleRunDirect(item);
   };
 
@@ -351,6 +355,19 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
                   <Download className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Save</span>
                 </a>
+
+                {activeTab === "gdrive" && item.googleDriveUrl && (
+                  <a
+                    href={item.googleDriveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-xl text-amber-700 hover:text-amber-900 hover:bg-amber-100/60 border border-amber-200 transition-all flex items-center space-x-1 text-xs font-semibold"
+                    title="Open this file directly on Google Drive"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-amber-600" />
+                    <span className="hidden sm:inline">Drive</span>
+                  </a>
+                )}
 
                 <button
                   type="button"

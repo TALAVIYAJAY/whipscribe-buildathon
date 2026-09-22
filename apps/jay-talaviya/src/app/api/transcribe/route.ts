@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { WhipScribeClient, WhipScribeError } from "@/lib/whipscribe";
 import { extractIntelligence } from "@/lib/intelligence";
 import { extractIntelligenceWithGemini } from "@/lib/gemini";
-import { validateMediaUrlBeforeIntake } from "@/lib/media-validator";
+import { extractGoogleDriveId, validateMediaUrlBeforeIntake } from "@/lib/media-validator";
 
 export const maxDuration = 300; // Allow up to 5 minutes on Vercel Pro/serverless
 export const dynamic = "force-dynamic";
@@ -97,8 +97,14 @@ export async function POST(req: NextRequest) {
         fallbackTitle = validation.detectedTitle;
       }
 
+      // Normalize Google Drive URLs to direct streaming download URL
+      const gdriveId = extractGoogleDriveId(trimmedUrl);
+      const effectiveUrl = gdriveId
+        ? `https://drive.google.com/uc?export=download&id=${gdriveId}`
+        : trimmedUrl;
+
       // Submit URL to WhipScribe
-      const submitRes = await client.submitUrl(trimmedUrl, language);
+      const submitRes = await client.submitUrl(effectiveUrl, language);
       jobId = submitRes.job_id;
     }
 
