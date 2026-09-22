@@ -49,6 +49,13 @@ export interface WhipScribeAudioUrlResponse {
   retention_days?: number;
 }
 
+export class WhipScribeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "WhipScribeError";
+  }
+}
+
 export class WhipScribeClient {
   private apiKey: string;
 
@@ -72,15 +79,15 @@ export class WhipScribeClient {
   private async handleHttpError(res: Response, context: string): Promise<never> {
     const errText = await res.text().catch(() => "");
     if (res.status === 401 || res.status === 403) {
-      throw new Error(`Authentication failed (${res.status}): Please verify your WHIPSCRIBE_API_KEY in .env.`);
+      throw new WhipScribeError(`Authentication failed (${res.status}): Please verify your WHIPSCRIBE_API_KEY in .env.`);
     }
     if (res.status === 402) {
-      throw new Error("Insufficient WhipScribe credits. Please add audio-hours in your WhipScribe account.");
+      throw new WhipScribeError("Insufficient WhipScribe credits. Please add audio-hours in your WhipScribe account.");
     }
     if (res.status === 429) {
-      throw new Error("WhipScribe rate limit reached. Please wait a few seconds before retrying.");
+      throw new WhipScribeError("WhipScribe rate limit reached. Please wait a few seconds before retrying.");
     }
-    throw new Error(`WhipScribe ${context} failed (${res.status}): ${errText}`);
+    throw new WhipScribeError(`WhipScribe ${context} failed (${res.status}): ${errText}`);
   }
 
   /**
@@ -200,45 +207,50 @@ export class WhipScribeClient {
     let consecutiveNetworkErrors = 0;
 
     while (Date.now() - startTime < maxWaitSeconds * 1000) {
+      let status: WhipScribeJobStatus;
+
       try {
-        const status = await this.getJobStatus(jobId);
+        status = await this.getJobStatus(jobId);
         consecutiveNetworkErrors = 0; // reset on successful ping
-
-        if (onProgress) {
-          onProgress(status.progress ?? 0, status.status);
-        }
-
-        if (status.status === "done") {
-          // Check for WhipScribe paywall lock status
-          if (status.locked) {
-            throw new Error(
-              "This transcript is locked or paywalled. Your WhipScribe account needs active credit balance."
-            );
-          }
-          return status;
-        }
-
-        if (status.status === "failed") {
-          throw new Error(status.error || `Transcription job failed for ID: ${jobId}`);
-        }
       } catch (err: unknown) {
-        // If it's a definitive failure (like job failed or paywalled), rethrow immediately
-        const msg = String(err);
-        if (msg.includes("paywalled") || msg.includes("Transcription job failed")) {
+        // If it's a definitive WhipScribe HTTP rejection (e.g. 401, 402, 429), rethrow immediately
+        if (err instanceof WhipScribeError) {
           throw err;
         }
 
         // Allow up to 4 consecutive transient network poll failures before aborting
         consecutiveNetworkErrors++;
-        console.warn(`[WhipScribe] Poll attempt transient error (${consecutiveNetworkErrors}/4):`, err);
+        console.warn(`[WhipScribe] Poll attempt transient network error (${consecutiveNetworkErrors}/4):`, err);
         if (consecutiveNetworkErrors >= 4) {
-          throw new Error(`Lost connection to WhipScribe polling endpoint: ${err}`);
+          throw new WhipScribeError(`Lost connection to WhipScribe polling endpoint: ${err}`);
         }
+
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        continue;
+      }
+
+      if (onProgress) {
+        onProgress(status.progress ?? 0, status.status);
+      }
+
+      if (status.status === "done") {
+        // Check for WhipScribe paywall lock status
+        if (status.locked) {
+          throw new WhipScribeError(
+            "This transcript is locked or paywalled. Your WhipScribe account needs active credit balance."
+          );
+        }
+        return status;
+      }
+
+      if (status.status === "failed") {
+        const failureReason = status.error || `Transcription job failed for ID: ${jobId}`;
+        throw new WhipScribeError(failureReason);
       }
 
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
     }
 
-    throw new Error(`Timed out waiting for WhipScribe job ${jobId} to complete after ${maxWaitSeconds}s`);
+    throw new WhipScribeError(`Timed out waiting for WhipScribe job ${jobId} to complete after ${maxWaitSeconds}s`);
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { WhipScribeClient } from "@/lib/whipscribe";
+import { WhipScribeClient, WhipScribeError } from "@/lib/whipscribe";
 import { extractIntelligence } from "@/lib/intelligence";
 import { extractIntelligenceWithGemini } from "@/lib/gemini";
 import { validateMediaUrlBeforeIntake } from "@/lib/media-validator";
@@ -157,13 +157,17 @@ export async function POST(req: NextRequest) {
     const isUrl = !req.headers.get("content-type")?.includes("multipart/form-data");
     const errMsg = err instanceof Error ? err.message : String(err);
 
-    // If it's a specific WhipScribe error (credits, rate limit, auth, locked), return it directly
+    // If it's a specific WhipScribe error (job failed, bot blocked, credits, rate limit, auth, locked), return it directly
     if (
+      err instanceof WhipScribeError ||
       errMsg.includes("WhipScribe") ||
       errMsg.includes("credits") ||
       errMsg.includes("rate limit") ||
       errMsg.includes("Authentication failed") ||
-      errMsg.includes("locked or paywalled")
+      errMsg.includes("locked or paywalled") ||
+      errMsg.includes("youtube.com") ||
+      errMsg.includes("sign in") ||
+      errMsg.includes("exceeds the 10-minute demo limit")
     ) {
       return NextResponse.json({ error: errMsg }, { status: 400 });
     }
