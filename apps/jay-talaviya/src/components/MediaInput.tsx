@@ -105,11 +105,12 @@ export const MediaInput: React.FC<MediaInputProps> = ({
       <div className="flex items-center border-b border-gray-100 bg-gray-50/70 p-1.5 gap-1.5">
         <button
           type="button"
+          disabled={isLoading}
           onClick={() => {
             setActiveTab("url");
             setValidationError(null);
           }}
-          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all ${
+          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
             activeTab === "url"
               ? "bg-white text-whip-800 shadow-sm border border-gray-100"
               : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/50"
@@ -120,11 +121,12 @@ export const MediaInput: React.FC<MediaInputProps> = ({
         </button>
         <button
           type="button"
+          disabled={isLoading}
           onClick={() => {
             setActiveTab("file");
             setValidationError(null);
           }}
-          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all ${
+          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
             activeTab === "file"
               ? "bg-white text-whip-800 shadow-sm border border-gray-100"
               : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/50"
@@ -227,18 +229,27 @@ export const MediaInput: React.FC<MediaInputProps> = ({
 
             <div
               onDragOver={(e) => {
+                if (isLoading) return;
                 e.preventDefault();
                 setDragActive(true);
               }}
               onDragLeave={() => setDragActive(false)}
-              onDrop={handleFileDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-                dragActive
-                  ? "border-whip-500 bg-whip-50/60"
-                  : selectedFile
-                  ? "border-emerald-300 bg-emerald-50/30"
-                  : "border-gray-200 hover:border-whip-300 hover:bg-gray-50/50"
+              onDrop={(e) => {
+                if (isLoading) return;
+                handleFileDrop(e);
+              }}
+              onClick={() => {
+                if (!isLoading) fileInputRef.current?.click();
+              }}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                isLoading
+                  ? "opacity-50 cursor-not-allowed border-gray-200 bg-gray-50"
+                  : "cursor-pointer " +
+                    (dragActive
+                      ? "border-whip-500 bg-whip-50/60"
+                      : selectedFile
+                      ? "border-emerald-300 bg-emerald-50/30"
+                      : "border-gray-200 hover:border-whip-300 hover:bg-gray-50/50")
               }`}
             >
               {selectedFile ? (

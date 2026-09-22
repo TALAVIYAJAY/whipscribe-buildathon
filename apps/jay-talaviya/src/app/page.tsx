@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { RotateCcw } from "lucide-react";
+import React, { useState, useRef } from "react";
 import { Header } from "@/components/Header";
 import { MediaInput } from "@/components/MediaInput";
 import { ProgressStepper } from "@/components/ProgressStepper";
@@ -17,6 +16,7 @@ export default function HomePage() {
   const [currentStep, setCurrentStep] = useState(0); // 0 = idle, 1 = submitted, 2 = transcribing, 3 = intelligence, 4 = airtable
   const [stepStatusText, setStepStatusText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Active result state
   const [jobId, setJobId] = useState<string | null>(null);
@@ -32,7 +32,21 @@ export default function HomePage() {
   /**
    * Reset all state to start a clean new session
    */
+  const handleCancelOperation = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+    setCurrentStep(0);
+    setStepStatusText("");
+  };
+
   const handleResetSession = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
     setIsLoading(false);
     setCurrentStep(0);
     setStepStatusText("");
@@ -87,6 +101,13 @@ export default function HomePage() {
    * Process URL submission
    */
   const handleProcessUrl = async (url: string) => {
+    // Abort any existing in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     // Explicitly isolate each run: clear all previous data immediately
     setErrorMessage(null);
     setJobId(null);
@@ -108,6 +129,7 @@ export default function HomePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -131,11 +153,20 @@ export default function HomePage() {
       setCurrentStep(5);
       setStepStatusText("Pipeline Complete!");
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        console.log("URL request aborted by user");
+        setIsLoading(false);
+        setCurrentStep(0);
+        return;
+      }
       const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
       setErrorMessage(msg);
       setCurrentStep(0);
     } finally {
       setIsLoading(false);
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -152,6 +183,9 @@ export default function HomePage() {
     setAirtableRecordId(null);
     setAirtableSyncSuccess(false);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoading(true);
     setCurrentStep(1);
     setStepStatusText(`Uploading ${file.name}...`);
@@ -166,6 +200,7 @@ export default function HomePage() {
       const res = await fetch("/api/transcribe", {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -191,11 +226,20 @@ export default function HomePage() {
       setCurrentStep(5);
       setStepStatusText("Pipeline Complete!");
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        console.log("File request aborted by user");
+        setIsLoading(false);
+        setCurrentStep(0);
+        return;
+      }
       const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
       setErrorMessage(msg);
       setCurrentStep(0);
     } finally {
       setIsLoading(false);
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -237,6 +281,7 @@ export default function HomePage() {
           <ProgressStepper
             currentStep={currentStep}
             stepStatusText={stepStatusText}
+            onCancel={handleCancelOperation}
           />
         )}
 
@@ -254,24 +299,6 @@ export default function HomePage() {
         {/* Done State: Audio Intelligence Results */}
         {intelligence && transcript && (
           <div className="space-y-6 animate-fadeIn">
-            {/* Session Action Bar */}
-            <div className="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-gray-200/80 shadow-sm">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-bold text-gray-800 uppercase tracking-wider">
-                  Active Intelligence Session
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleResetSession}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-600 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-200 transition-all shadow-sm"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Clear & Start New Session</span>
-              </button>
-            </div>
-
             {/* Airtable Sync Status Card */}
             <AirtableCard
               recordId={airtableRecordId}
@@ -287,14 +314,12 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Quick-Launch Demo Scenarios (Shown when idle or ready for quick tests) */}
-        {!intelligence && (
-          <SampleScenarios
-            onSelectSample={handleProcessFile}
-            onSubmitUrl={handleProcessUrl}
-            isLoading={isLoading}
-          />
-        )}
+        {/* Quick-Launch Demo Scenarios (Always accessible so users can run another scenario without refreshing) */}
+        <SampleScenarios
+          onSelectSample={handleProcessFile}
+          onSubmitUrl={handleProcessUrl}
+          isLoading={isLoading}
+        />
       </main>
 
       {/* Footer */}

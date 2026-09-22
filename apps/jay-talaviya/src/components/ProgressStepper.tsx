@@ -1,18 +1,20 @@
 "use client";
 
 import React from "react";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, X } from "lucide-react";
 
 export type StepState = "waiting" | "active" | "completed" | "error";
 
 interface ProgressStepperProps {
-  currentStep: number; // 1 to 4
+  currentStep: number; // 1 to 5
   stepStatusText?: string;
+  onCancel?: () => void;
 }
 
 export const ProgressStepper: React.FC<ProgressStepperProps> = ({
   currentStep,
   stepStatusText,
+  onCancel,
 }) => {
   const steps = [
     { title: "Input Received", desc: "URL or File staged" },
@@ -27,11 +29,24 @@ export const ProgressStepper: React.FC<ProgressStepperProps> = ({
         <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
           Workflow Pipeline Progress
         </h3>
-        {stepStatusText && (
-          <span className="text-xs font-mono text-whip-700 bg-whip-50 px-2.5 py-1 rounded-full border border-whip-100 animate-pulse">
-            {stepStatusText}
-          </span>
-        )}
+        <div className="flex items-center space-x-2">
+          {stepStatusText && (
+            <span className="text-xs font-mono text-whip-700 bg-whip-50 px-2.5 py-1 rounded-full border border-whip-100 animate-pulse">
+              {stepStatusText}
+            </span>
+          )}
+          {onCancel && currentStep > 0 && currentStep < 5 && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-2.5 py-1 rounded-full text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all flex items-center space-x-1 shadow-xs"
+              title="Cancel the ongoing operation"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Cancel</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -156,6 +156,7 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
 
   const handleRunDirect = async (item: DemoItem) => {
+    if (isLoading) return;
     const fileUrl = `/samples/${item.fileName}`;
     setLoadingItemId(item.id);
 
@@ -178,6 +179,7 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
   };
 
   const handleRunGdrive = async (item: DemoItem) => {
+    if (isLoading) return;
     const link =
       item.googleDriveUrl ||
       (item.format === "wav"
@@ -273,8 +275,9 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
         <div className="flex items-center bg-gray-100/80 p-1 rounded-xl border border-gray-200 self-start md:self-auto">
           <button
             type="button"
+            disabled={isLoading}
             onClick={() => setActiveTab("direct")}
-            className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
               activeTab === "direct"
                 ? "bg-white text-whip-800 shadow-sm border border-gray-100"
                 : "text-gray-500 hover:text-gray-900"
@@ -285,8 +288,9 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
           </button>
           <button
             type="button"
+            disabled={isLoading}
             onClick={() => setActiveTab("gdrive")}
-            className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
               activeTab === "gdrive"
                 ? "bg-white text-amber-700 shadow-sm border border-gray-100"
                 : "text-gray-500 hover:text-gray-900"
@@ -297,36 +301,6 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
           </button>
         </div>
       </div>
-
-      {/* Google Drive Notice Banner when gdrive tab is active */}
-      {activeTab === "gdrive" && (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50/80 border border-amber-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fadeIn">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
-              <FolderOpen className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-xs font-bold text-amber-950">
-                Google Drive Cloud Ingestion Vector
-              </div>
-              <p className="text-[11px] text-amber-800">
-                These 3 files are stored in Google Drive. You can preview the audio, open them on Google Drive, or run the automated extraction pipeline.
-              </p>
-            </div>
-          </div>
-          {googleDriveFolderUrl && (
-            <a
-              href={googleDriveFolderUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm transition-all whitespace-nowrap self-start sm:self-auto"
-            >
-              <span>Open Drive Folder</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
-        </div>
-      )}
 
       {/* 3 Scenario Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fadeIn">
