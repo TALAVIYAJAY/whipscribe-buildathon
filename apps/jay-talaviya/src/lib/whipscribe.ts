@@ -244,7 +244,10 @@ export class WhipScribeClient {
       }
 
       if (status.status === "failed") {
-        const failureReason = status.error || `Transcription job failed for ID: ${jobId}`;
+        let failureReason = status.error || `Transcription job failed for ID: ${jobId}`;
+        if (failureReason.includes("engine door unreachable")) {
+          failureReason = "WhipScribe GPU worker cluster is temporarily unresponsive (engine door unreachable). The WhipScribe server is attempting to recover. Please retry in a moment or click Cancel.";
+        }
         throw new WhipScribeError(failureReason);
       }
 

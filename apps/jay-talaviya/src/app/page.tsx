@@ -125,12 +125,17 @@ export default function HomePage() {
       setCurrentStep(2);
       setStepStatusText("Transcribing audio & analyzing speakers...");
 
+      const queueTimer = setTimeout(() => {
+        setStepStatusText("Waiting for WhipScribe GPU worker queue...");
+      }, 18000);
+
       const res = await fetch("/api/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
         signal: controller.signal,
       });
+      clearTimeout(queueTimer);
 
       const data = await res.json();
       if (!res.ok) {
@@ -194,6 +199,10 @@ export default function HomePage() {
       setCurrentStep(2);
       setStepStatusText("WhipScribe transcribing speech & timestamps...");
 
+      const queueTimer = setTimeout(() => {
+        setStepStatusText("Waiting for WhipScribe GPU worker queue...");
+      }, 18000);
+
       const formData = new FormData();
       formData.append("file", file);
 
@@ -202,6 +211,7 @@ export default function HomePage() {
         body: formData,
         signal: controller.signal,
       });
+      clearTimeout(queueTimer);
 
       const data = await res.json();
       if (!res.ok) {

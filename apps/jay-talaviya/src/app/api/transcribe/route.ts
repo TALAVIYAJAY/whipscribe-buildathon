@@ -179,7 +179,8 @@ export async function POST(req: NextRequest) {
       errMsg.includes("locked or paywalled") ||
       errMsg.includes("youtube.com") ||
       errMsg.includes("sign in") ||
-      errMsg.includes("exceeds the 10-minute demo limit")
+      errMsg.includes("exceeds the 10-minute demo limit") ||
+      errMsg.includes("engine door unreachable")
     ) {
       return NextResponse.json({ error: errMsg }, { status: 400 });
     }
