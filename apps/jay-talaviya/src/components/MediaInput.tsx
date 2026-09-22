@@ -9,6 +9,12 @@ interface MediaInputProps {
   onClear?: () => void;
   hasActiveResult?: boolean;
   isLoading: boolean;
+  activeTab?: "url" | "file";
+  onTabChange?: (tab: "url" | "file") => void;
+  urlValue?: string;
+  onUrlChange?: (url: string) => void;
+  fileValue?: File | null;
+  onFileChange?: (file: File | null) => void;
 }
 
 export const MediaInput: React.FC<MediaInputProps> = ({
@@ -17,11 +23,36 @@ export const MediaInput: React.FC<MediaInputProps> = ({
   onClear,
   hasActiveResult = false,
   isLoading,
+  activeTab: propTab,
+  onTabChange,
+  urlValue: propUrl,
+  onUrlChange,
+  fileValue: propFile,
+  onFileChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<"url" | "file">("url");
-  const [urlInput, setUrlInput] = useState("");
+  const [internalTab, setInternalTab] = useState<"url" | "file">("url");
+  const [internalUrl, setInternalUrl] = useState("");
+  const [internalFile, setInternalFile] = useState<File | null>(null);
+
+  const activeTab = propTab !== undefined ? propTab : internalTab;
+  const setActiveTab = (tab: "url" | "file") => {
+    setInternalTab(tab);
+    onTabChange?.(tab);
+  };
+
+  const urlInput = propUrl !== undefined ? propUrl : internalUrl;
+  const setUrlInput = (u: string) => {
+    setInternalUrl(u);
+    onUrlChange?.(u);
+  };
+
+  const selectedFile = propFile !== undefined ? propFile : internalFile;
+  const setSelectedFile = (f: File | null) => {
+    setInternalFile(f);
+    onFileChange?.(f);
+  };
+
   const [dragActive, setDragActive] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

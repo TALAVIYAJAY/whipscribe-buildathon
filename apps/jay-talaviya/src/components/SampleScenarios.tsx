@@ -132,23 +132,15 @@ export const GDRIVE_ITEMS: DemoItem[] = [
 ];
 
 interface SampleScenariosProps {
-  onSelectSample: (file: File) => void;
-  onSubmitUrl?: (url: string) => void;
+  onSelectSample: (item: DemoItem) => void;
+  onSelectGdrive: (item: DemoItem) => void;
   isLoading: boolean;
-  googleDriveFolderUrl?: string;
-  googleDriveLinks?: {
-    wavUrl?: string;
-    mp3Url?: string;
-    mp4Url?: string;
-  };
 }
 
 export const SampleScenarios: React.FC<SampleScenariosProps> = ({
   onSelectSample,
-  onSubmitUrl,
+  onSelectGdrive,
   isLoading,
-  googleDriveFolderUrl = "https://drive.google.com/drive/folders/1B_WhipScribeDemoAssets",
-  googleDriveLinks = {},
 }) => {
   // Collapsed by default as requested
   const [isExpanded, setIsExpanded] = useState(false);
@@ -161,47 +153,16 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
     }
   }, [isLoading]);
 
-  const handleRunDirect = async (item: DemoItem) => {
+  const handleRunDirect = (item: DemoItem) => {
     if (isLoading) return;
-    const fileUrl = `/samples/${item.fileName}`;
     setActiveRunningId(item.id);
-
-    try {
-      const res = await fetch(fileUrl);
-      if (!res.ok) throw new Error(`Could not load ${item.fileName}`);
-      const blob = await res.blob();
-      const mimeType =
-        item.format === "wav" ? "audio/wav" : item.format === "mp3" ? "audio/mpeg" : "video/mp4";
-      const file = new File([blob], item.fileName, { type: mimeType });
-
-      window.scrollTo({ top: 120, behavior: "smooth" });
-      onSelectSample(file);
-    } catch (err) {
-      console.error("Failed to run sample:", err);
-      alert(`Could not load demo file ${item.fileName}.`);
-      setActiveRunningId(null);
-    }
+    onSelectSample(item);
   };
 
-  const handleRunGdrive = async (item: DemoItem) => {
+  const handleRunGdrive = (item: DemoItem) => {
     if (isLoading) return;
     setActiveRunningId(item.id);
-    const link =
-      item.googleDriveUrl ||
-      (item.format === "wav"
-        ? googleDriveLinks.wavUrl
-        : item.format === "mp3"
-        ? googleDriveLinks.mp3Url
-        : googleDriveLinks.mp4Url);
-
-    if (link && onSubmitUrl) {
-      window.scrollTo({ top: 120, behavior: "smooth" });
-      onSubmitUrl(link);
-      return;
-    }
-
-    // Fallback: load file directly and process through pipeline
-    await handleRunDirect(item);
+    onSelectGdrive(item);
   };
 
   const activeItems = activeTab === "direct" ? DIRECT_UPLOAD_ITEMS : GDRIVE_ITEMS;

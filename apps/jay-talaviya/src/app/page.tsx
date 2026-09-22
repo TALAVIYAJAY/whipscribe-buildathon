@@ -7,7 +7,7 @@ import { ProgressStepper } from "@/components/ProgressStepper";
 import { IntelligenceView } from "@/components/IntelligenceView";
 import { AirtableCard } from "@/components/AirtableCard";
 import { OfflineBanner, EmptyStateView, ErrorStateView } from "@/components/StateViews";
-import { SampleScenarios } from "@/components/SampleScenarios";
+import { SampleScenarios, DemoItem } from "@/components/SampleScenarios";
 import { ExtractedIntelligence } from "@/lib/intelligence";
 import { WhipScribeTranscriptResult } from "@/lib/whipscribe";
 
@@ -18,6 +18,11 @@ export default function HomePage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const queueTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Controlled MediaInput state for unified sync
+  const [activeInputTab, setActiveInputTab] = useState<"url" | "file">("url");
+  const [urlInputValue, setUrlInputValue] = useState("");
+  const [selectedUploadFile, setSelectedUploadFile] = useState<File | null>(null);
 
   const clearQueueTimer = () => {
     if (queueTimerRef.current) {
@@ -67,6 +72,8 @@ export default function HomePage() {
     setIntelligence(null);
     setAirtableRecordId(null);
     setAirtableSyncSuccess(false);
+    setUrlInputValue("");
+    setSelectedUploadFile(null);
   };
 
   /**
@@ -128,6 +135,9 @@ export default function HomePage() {
     setIntelligence(null);
     setAirtableRecordId(null);
     setAirtableSyncSuccess(false);
+    setActiveInputTab("url");
+    setUrlInputValue(url);
+    setSelectedUploadFile(null);
 
     setIsLoading(true);
     setCurrentStep(1);
@@ -212,6 +222,9 @@ export default function HomePage() {
     setIntelligence(null);
     setAirtableRecordId(null);
     setAirtableSyncSuccess(false);
+    setActiveInputTab("file");
+    setSelectedUploadFile(file);
+    setUrlInputValue("");
 
     setIsLoading(true);
     setCurrentStep(1);
@@ -279,6 +292,65 @@ export default function HomePage() {
     }
   };
 
+  /**
+   * Quick-Launch Scenario handlers:
+   * Replicates the exact same path as direct URL and manual file upload,
+   * while immediately wiping all previous session data.
+   */
+  const handleSelectScenarioDirect = async (item: DemoItem) => {
+    // 1. Synchronously wipe previous results and cancel ongoing tasks
+    handleResetSession();
+    setActiveInputTab("file");
+
+    // 2. Smoothly scroll to MediaInput
+    const mediaInputEl = document.getElementById("media-input-section");
+    if (mediaInputEl) {
+      mediaInputEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    // 3. Prepare the demo file into the exact file upload path
+    setIsLoading(true);
+    setCurrentStep(1);
+    setStepStatusText(`Preparing ${item.fileName}...`);
+
+    try {
+      const fileUrl = `/samples/${item.fileName}`;
+      const res = await fetch(fileUrl);
+      if (!res.ok) throw new Error(`Could not load demo file ${item.fileName}`);
+      const blob = await res.blob();
+      const mimeType =
+        item.format === "wav" ? "audio/wav" : item.format === "mp3" ? "audio/mpeg" : "video/mp4";
+      const file = new File([blob], item.fileName, { type: mimeType });
+
+      setSelectedUploadFile(file);
+      await handleProcessFile(file);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to load demo file";
+      setErrorMessage(msg);
+      setIsLoading(false);
+      setCurrentStep(0);
+      setStepStatusText("");
+    }
+  };
+
+  const handleSelectScenarioGdrive = async (item: DemoItem) => {
+    // 1. Synchronously wipe previous results and cancel ongoing tasks
+    handleResetSession();
+
+    const driveLink = item.googleDriveUrl || "";
+    setActiveInputTab("url");
+    setUrlInputValue(driveLink);
+
+    // 2. Smoothly scroll to MediaInput
+    const mediaInputEl = document.getElementById("media-input-section");
+    if (mediaInputEl) {
+      mediaInputEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    // 3. Launch exact same handleProcessUrl
+    await handleProcessUrl(driveLink);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50/50">
       <Header />
@@ -302,8 +374,14 @@ export default function HomePage() {
         </div>
 
         {/* Media Input Form */}
-        <div className="mb-8">
+        <div id="media-input-section" className="mb-8 scroll-mt-24">
           <MediaInput
+            activeTab={activeInputTab}
+            onTabChange={setActiveInputTab}
+            urlValue={urlInputValue}
+            onUrlChange={setUrlInputValue}
+            fileValue={selectedUploadFile}
+            onFileChange={setSelectedUploadFile}
             onSubmitUrl={handleProcessUrl}
             onSubmitFile={handleProcessFile}
             onClear={handleResetSession}
@@ -352,8 +430,8 @@ export default function HomePage() {
 
         {/* Quick-Launch Demo Scenarios (Always accessible so users can run another scenario without refreshing) */}
         <SampleScenarios
-          onSelectSample={handleProcessFile}
-          onSubmitUrl={handleProcessUrl}
+          onSelectSample={handleSelectScenarioDirect}
+          onSelectGdrive={handleSelectScenarioGdrive}
           isLoading={isLoading}
         />
       </main>
