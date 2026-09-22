@@ -109,7 +109,8 @@ Visit [http://localhost:3000](http://localhost:3000) to test with:
 
 - **Production URL**: [https://whipscribe-buildathon.vercel.app/](https://whipscribe-buildathon.vercel.app/)
 - **Live Airtable Base**: Connected to Base `appx2rQXn4238eQ0v` (`Table 1`)
-- **2-Minute Video Walkthrough**: [Watch the Walkthrough Demo](https://youtu.be/PLACEHOLDER_VIDEO_URL) *(Recording in progress)*
+- **2-Minute Video Walkthrough**: [Watch the 2-Minute Demo Recording on Google Drive ↗](https://drive.google.com/file/d/1GwLPFSS64MzcDn7pd9qgNN921lEa5eYu/view?usp=sharing)
+
 
 ### Curated Evaluation Test Vectors (6 Files)
 
