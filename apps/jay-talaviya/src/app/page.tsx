@@ -17,6 +17,14 @@ export default function HomePage() {
   const [stepStatusText, setStepStatusText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const queueTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const clearQueueTimer = () => {
+    if (queueTimerRef.current) {
+      clearTimeout(queueTimerRef.current);
+      queueTimerRef.current = null;
+    }
+  };
 
   // Active result state
   const [jobId, setJobId] = useState<string | null>(null);
@@ -33,6 +41,7 @@ export default function HomePage() {
    * Reset all state to start a clean new session
    */
   const handleCancelOperation = () => {
+    clearQueueTimer();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -43,6 +52,7 @@ export default function HomePage() {
   };
 
   const handleResetSession = () => {
+    clearQueueTimer();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -101,14 +111,16 @@ export default function HomePage() {
    * Process URL submission
    */
   const handleProcessUrl = async (url: string) => {
-    // Abort any existing in-flight request
+    // 1. Abort any existing in-flight request and timer
+    clearQueueTimer();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    // Explicitly isolate each run: clear all previous data immediately
+    // 2. Explicitly isolate each run: clear all previous data immediately
     setErrorMessage(null);
     setJobId(null);
     setAudioUrl(null);
@@ -125,7 +137,7 @@ export default function HomePage() {
       setCurrentStep(2);
       setStepStatusText("Transcribing audio & analyzing speakers...");
 
-      const queueTimer = setTimeout(() => {
+      queueTimerRef.current = setTimeout(() => {
         setStepStatusText("Waiting for WhipScribe GPU worker queue...");
       }, 18000);
 
@@ -135,7 +147,7 @@ export default function HomePage() {
         body: JSON.stringify({ url }),
         signal: controller.signal,
       });
-      clearTimeout(queueTimer);
+      clearQueueTimer();
 
       const data = await res.json();
       if (!res.ok) {
@@ -158,16 +170,20 @@ export default function HomePage() {
       setCurrentStep(5);
       setStepStatusText("Pipeline Complete!");
     } catch (err: unknown) {
+      clearQueueTimer();
       if (err instanceof DOMException && err.name === "AbortError") {
         console.log("URL request aborted by user");
         setIsLoading(false);
         setCurrentStep(0);
+        setStepStatusText("");
         return;
       }
       const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
       setErrorMessage(msg);
       setCurrentStep(0);
+      setStepStatusText("");
     } finally {
+      clearQueueTimer();
       setIsLoading(false);
       if (abortControllerRef.current === controller) {
         abortControllerRef.current = null;
@@ -179,7 +195,16 @@ export default function HomePage() {
    * Process direct file upload
    */
   const handleProcessFile = async (file: File) => {
-    // Explicitly isolate each run: clear all previous data immediately
+    // 1. Abort any existing in-flight request and timer
+    clearQueueTimer();
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // 2. Explicitly isolate each run: clear all previous data immediately
     setErrorMessage(null);
     setJobId(null);
     setAudioUrl(null);
@@ -187,9 +212,6 @@ export default function HomePage() {
     setIntelligence(null);
     setAirtableRecordId(null);
     setAirtableSyncSuccess(false);
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
 
     setIsLoading(true);
     setCurrentStep(1);
@@ -199,7 +221,7 @@ export default function HomePage() {
       setCurrentStep(2);
       setStepStatusText("WhipScribe transcribing speech & timestamps...");
 
-      const queueTimer = setTimeout(() => {
+      queueTimerRef.current = setTimeout(() => {
         setStepStatusText("Waiting for WhipScribe GPU worker queue...");
       }, 18000);
 
@@ -211,7 +233,7 @@ export default function HomePage() {
         body: formData,
         signal: controller.signal,
       });
-      clearTimeout(queueTimer);
+      clearQueueTimer();
 
       const data = await res.json();
       if (!res.ok) {
@@ -236,16 +258,20 @@ export default function HomePage() {
       setCurrentStep(5);
       setStepStatusText("Pipeline Complete!");
     } catch (err: unknown) {
+      clearQueueTimer();
       if (err instanceof DOMException && err.name === "AbortError") {
         console.log("File request aborted by user");
         setIsLoading(false);
         setCurrentStep(0);
+        setStepStatusText("");
         return;
       }
       const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
       setErrorMessage(msg);
       setCurrentStep(0);
+      setStepStatusText("");
     } finally {
+      clearQueueTimer();
       setIsLoading(false);
       if (abortControllerRef.current === controller) {
         abortControllerRef.current = null;

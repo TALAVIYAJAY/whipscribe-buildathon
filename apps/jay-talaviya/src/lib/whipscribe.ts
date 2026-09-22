@@ -205,6 +205,7 @@ export class WhipScribeClient {
     const startTime = Date.now();
     const intervalMs = 2500;
     let consecutiveNetworkErrors = 0;
+    let stuckProgress90Time: number | null = null;
 
     while (Date.now() - startTime < maxWaitSeconds * 1000) {
       let status: WhipScribeJobStatus;
@@ -231,6 +232,19 @@ export class WhipScribeClient {
 
       if (onProgress) {
         onProgress(status.progress ?? 0, status.status);
+      }
+
+      // Safeguard: detect WhipScribe engine door hanging at 90% without forcing user to wait 3 minutes
+      if (status.status === "processing" && (status.progress ?? 0) >= 90) {
+        if (!stuckProgress90Time) {
+          stuckProgress90Time = Date.now();
+        } else if (Date.now() - stuckProgress90Time > 75000) {
+          throw new WhipScribeError(
+            "WhipScribe GPU worker cluster is temporarily unresponsive (engine door timeout). Please retry in a moment or click Cancel."
+          );
+        }
+      } else {
+        stuckProgress90Time = null;
       }
 
       if (status.status === "done") {

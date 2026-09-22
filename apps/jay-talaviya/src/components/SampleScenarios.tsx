@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Sparkles,
   Download,
-  ExternalLink,
+  Loader2,
   Users,
   Target,
   TrendingUp,
@@ -153,12 +153,18 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
   // Collapsed by default as requested
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<"direct" | "gdrive">("direct");
-  const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
+  const [activeRunningId, setActiveRunningId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setActiveRunningId(null);
+    }
+  }, [isLoading]);
 
   const handleRunDirect = async (item: DemoItem) => {
     if (isLoading) return;
     const fileUrl = `/samples/${item.fileName}`;
-    setLoadingItemId(item.id);
+    setActiveRunningId(item.id);
 
     try {
       const res = await fetch(fileUrl);
@@ -173,13 +179,13 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
     } catch (err) {
       console.error("Failed to run sample:", err);
       alert(`Could not load demo file ${item.fileName}.`);
-    } finally {
-      setLoadingItemId(null);
+      setActiveRunningId(null);
     }
   };
 
   const handleRunGdrive = async (item: DemoItem) => {
     if (isLoading) return;
+    setActiveRunningId(item.id);
     const link =
       item.googleDriveUrl ||
       (item.format === "wav"
@@ -307,7 +313,7 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
         {activeItems.map((item) => {
           const Icon = item.icon;
           const fileUrl = `/samples/${item.fileName}`;
-          const isThisLoading = isLoading || loadingItemId === item.id;
+          const isThisItemRunning = isLoading && activeRunningId === item.id;
 
           return (
             <div
@@ -376,46 +382,44 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
               </div>
 
               {/* Card Footer / Action Buttons */}
-              <div className="p-4 bg-gray-50/70 border-t border-gray-100 flex items-center justify-between gap-2">
+              <div className="p-4 bg-gray-50/70 border-t border-gray-100 flex items-center justify-between gap-3">
                 <a
                   href={fileUrl}
                   download={item.fileName}
-                  className="p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-white border border-transparent hover:border-gray-200 transition-all flex items-center space-x-1 text-xs font-semibold"
+                  className="px-3 py-2.5 rounded-xl text-gray-600 hover:text-gray-950 hover:bg-white border border-gray-200/80 hover:border-gray-300 transition-all flex items-center space-x-1.5 text-xs font-semibold shadow-2xs"
                   title={`Download ${item.fileName}`}
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Save</span>
+                  <span>Save</span>
                 </a>
-
-                {activeTab === "gdrive" && item.googleDriveUrl && (
-                  <a
-                    href={item.googleDriveUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-xl text-amber-700 hover:text-amber-900 hover:bg-amber-100/60 border border-amber-200 transition-all flex items-center space-x-1 text-xs font-semibold"
-                    title="Open this file directly on Google Drive"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 text-amber-600" />
-                    <span className="hidden sm:inline">Drive</span>
-                  </a>
-                )}
 
                 <button
                   type="button"
                   onClick={() =>
                     activeTab === "direct" ? handleRunDirect(item) : handleRunGdrive(item)
                   }
-                  disabled={isThisLoading}
-                  className="flex-1 inline-flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-xl bg-whip-700 hover:bg-whip-800 active:scale-[0.98] text-white text-xs font-bold shadow-sm shadow-whip-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  disabled={isLoading}
+                  className={`flex-1 inline-flex items-center justify-center space-x-1.5 px-4 py-2.5 rounded-xl text-white text-xs font-bold shadow-sm transition-all ${
+                    isThisItemRunning
+                      ? "bg-whip-600 cursor-wait shadow-whip-700/30 animate-pulse"
+                      : isLoading
+                      ? "bg-gray-400 opacity-60 cursor-not-allowed"
+                      : "bg-whip-700 hover:bg-whip-800 active:scale-[0.98] shadow-whip-700/20"
+                  }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>
-                    {isThisLoading
-                      ? "Launching Pipeline..."
-                      : activeTab === "direct"
-                      ? "Test Direct Upload"
-                      : "Test Google Drive"}
-                  </span>
+                  {isThisItemRunning ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Launching Pipeline...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>
+                        {activeTab === "direct" ? "Test Direct Upload" : "Test Google Drive"}
+                      </span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
