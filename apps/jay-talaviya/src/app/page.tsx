@@ -8,6 +8,7 @@ import { ProgressStepper } from "@/components/ProgressStepper";
 import { IntelligenceView } from "@/components/IntelligenceView";
 import { AirtableCard } from "@/components/AirtableCard";
 import { OfflineBanner, EmptyStateView, ErrorStateView } from "@/components/StateViews";
+import { SampleScenarios } from "@/components/SampleScenarios";
 import { ExtractedIntelligence } from "@/lib/intelligence";
 import { WhipScribeTranscriptResult } from "@/lib/whipscribe";
 
@@ -286,9 +287,12 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Empty State (when idle and no intelligence loaded) */}
-        {!isLoading && !intelligence && !errorMessage && (
-          <EmptyStateView />
+        {/* Quick-Launch Demo Scenarios (Shown when idle or ready for quick tests) */}
+        {!intelligence && (
+          <SampleScenarios
+            onSelectSample={handleProcessFile}
+            isLoading={isLoading}
+          />
         )}
       </main>
 
