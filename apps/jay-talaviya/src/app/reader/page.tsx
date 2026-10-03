@@ -201,26 +201,27 @@ export default function MobileReaderPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col items-center select-none sm:select-auto">
       {/* Top Reviewer Bar */}
-      <div className="w-full bg-slate-800 border-b border-slate-700 px-4 py-2.5 sticky top-0 z-50 shadow-md">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center space-x-3">
+      <div className="w-full bg-slate-800 border-b border-slate-700 px-3 sm:px-4 py-2 sticky top-0 z-50 shadow-md">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center space-x-2 shrink-0">
             <Link
               href="/"
-              className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-300 font-medium"
+              className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-300 font-medium whitespace-nowrap"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to App</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back</span>
             </Link>
-            <span className="text-slate-500">|</span>
-            <span className="font-semibold text-white tracking-wide flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              Challenge 01: Complete Mobile Reader
+            <span className="text-slate-600">|</span>
+            <span className="font-semibold text-white tracking-wide flex items-center gap-1.5 truncate">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <span className="sm:hidden">Challenge 01 Pass</span>
+              <span className="hidden sm:inline">Challenge 01: Complete Mobile Reader</span>
             </span>
           </div>
 
-          {/* Device resolution switcher */}
-          <div className="flex items-center space-x-2">
-            <span className="text-slate-400 hidden sm:inline">Device width:</span>
+          {/* Device resolution switcher (Desktop only) */}
+          <div className="hidden md:flex items-center space-x-2">
+            <span className="text-slate-400">Device width:</span>
             <div className="inline-flex bg-slate-900 rounded-lg p-0.5 border border-slate-700">
               <button
                 onClick={() => setDeviceWidth("320")}
@@ -230,7 +231,7 @@ export default function MobileReaderPage() {
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                320px (Compact)
+                320px
               </button>
               <button
                 onClick={() => setDeviceWidth("375")}
@@ -240,7 +241,7 @@ export default function MobileReaderPage() {
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                375px (iPhone SE)
+                375px (iPhone)
               </button>
               <button
                 onClick={() => setDeviceWidth("390")}
@@ -250,7 +251,7 @@ export default function MobileReaderPage() {
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                390px (iPhone 14)
+                390px
               </button>
               <button
                 onClick={() => setDeviceWidth("full")}
@@ -260,7 +261,7 @@ export default function MobileReaderPage() {
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                Full Width
+                Full
               </button>
             </div>
           </div>
@@ -268,19 +269,19 @@ export default function MobileReaderPage() {
           {/* Quick State Toggle */}
           <button
             onClick={() => setIsProcessing(!isProcessing)}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium border transition-colors ${
+            className={`px-2 py-1 rounded text-[11px] font-medium border transition-colors shrink-0 whitespace-nowrap ${
               isProcessing
                 ? "bg-amber-500/30 text-amber-300 border-amber-500/50"
                 : "bg-slate-700/50 text-slate-400 border-slate-600 hover:text-white"
             }`}
           >
-            {isProcessing ? "Preview: Processing [ON]" : "Preview: Processing"}
+            {isProcessing ? "Processing [ON]" : "Preview: Processing"}
           </button>
         </div>
       </div>
 
-      {/* Metric comparison banner */}
-      <div className="w-full max-w-xl px-4 py-2 mt-2 flex items-center justify-between text-xs bg-slate-800/80 border border-slate-700 rounded-lg">
+      {/* Metric comparison banner (hidden on tiny screens) */}
+      <div className="hidden sm:flex w-full max-w-xl px-4 py-2 mt-2 items-center justify-between text-xs bg-slate-800/80 border border-slate-700 rounded-lg">
         <div className="flex items-center gap-2 text-slate-300">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>
@@ -292,11 +293,11 @@ export default function MobileReaderPage() {
         </span>
       </div>
 
-      {/* Main Mobile Frame */}
-      <div className="py-4 w-full flex justify-center items-center flex-1">
+      {/* Main Mobile Frame: Full-bleed native view on mobile, phone frame simulator on desktop */}
+      <div className="w-full flex justify-center items-center flex-1 md:py-4">
         <div
           style={{
-            width:
+            maxWidth:
               deviceWidth === "full"
                 ? "100%"
                 : deviceWidth === "320"
@@ -306,7 +307,7 @@ export default function MobileReaderPage() {
                 : "390px",
             height: deviceWidth === "full" ? "100%" : "667px"
           }}
-          className="relative bg-white text-slate-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-slate-700 flex flex-col transition-all duration-300"
+          className="relative bg-white text-slate-900 w-full min-h-[calc(100vh-42px)] md:min-h-0 md:rounded-3xl md:shadow-2xl overflow-hidden md:border-4 md:border-slate-700 flex flex-col transition-all duration-300"
         >
           {/* 1. SLIM 1-ROW UNIFIED HEADER (48px) - PERMANENTLY PINNED */}
           <header className="h-12 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 flex items-center justify-between shrink-0 z-30">

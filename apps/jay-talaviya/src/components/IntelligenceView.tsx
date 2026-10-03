@@ -134,19 +134,20 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
       </div>
 
       {/* Streamlined 2-Tab Navigation */}
-      <div className="flex border-b border-gray-100 px-6 gap-8 bg-slate-50/50">
+      <div className="flex border-b border-gray-100 px-3 sm:px-6 gap-2 sm:gap-8 bg-slate-50/50 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setActiveTab("brief")}
-          className={`flex items-center space-x-2.5 py-4 text-xs font-bold border-b-2 transition-all ${
+          className={`flex items-center space-x-1.5 sm:space-x-2.5 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
             activeTab === "brief"
               ? "border-whip-700 text-whip-800"
               : "border-transparent text-gray-500 hover:text-gray-900"
           }`}
         >
-          <Sparkles className="w-4 h-4 text-whip-700" />
-          <span>Executive Intelligence Brief</span>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-whip-100 text-whip-800 border border-whip-200 hidden sm:inline">
+          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-whip-700 shrink-0" />
+          <span className="sm:hidden">Executive Brief</span>
+          <span className="hidden sm:inline">Executive Intelligence Brief</span>
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-whip-100 text-whip-800 border border-whip-200 hidden md:inline">
             Unified View
           </span>
         </button>
@@ -154,16 +155,17 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab("transcript")}
-          className={`flex items-center space-x-2.5 py-4 text-xs font-bold border-b-2 transition-all ${
+          className={`flex items-center space-x-1.5 sm:space-x-2.5 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
             activeTab === "transcript"
               ? "border-whip-700 text-whip-800"
               : "border-transparent text-gray-500 hover:text-gray-900"
           }`}
         >
-          <MessageSquare className="w-4 h-4 text-purple-600" />
-          <span>Full Diarized Transcript</span>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 hidden sm:inline">
-            {transcript.segments?.length || 0} turns
+          <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 shrink-0" />
+          <span className="sm:hidden">Transcript</span>
+          <span className="hidden sm:inline">Full Diarized Transcript</span>
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+            {transcript.segments?.length || 0}
           </span>
         </button>
       </div>

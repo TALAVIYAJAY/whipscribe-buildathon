@@ -141,14 +141,15 @@ export const MediaInput: React.FC<MediaInputProps> = ({
             setActiveTab("url");
             setValidationError(null);
           }}
-          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex-1 flex items-center justify-center space-x-1.5 sm:space-x-2 py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
             activeTab === "url"
-              ? "bg-white text-whip-800 shadow-sm border border-gray-100"
+              ? "bg-white text-whip-800 shadow-xs border border-gray-100"
               : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/50"
           }`}
         >
-          <LinkIcon className="w-4 h-4" />
-          <span>Public Cloud / Audio URL</span>
+          <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <span className="sm:hidden">Cloud URL</span>
+          <span className="hidden sm:inline">Public Cloud / Audio URL</span>
         </button>
         <button
           type="button"
@@ -157,18 +158,19 @@ export const MediaInput: React.FC<MediaInputProps> = ({
             setActiveTab("file");
             setValidationError(null);
           }}
-          className={`flex-1 flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`flex-1 flex items-center justify-center space-x-1.5 sm:space-x-2 py-2 sm:py-2.5 px-2 sm:px-4 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
             activeTab === "file"
-              ? "bg-white text-whip-800 shadow-sm border border-gray-100"
+              ? "bg-white text-whip-800 shadow-xs border border-gray-100"
               : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/50"
           }`}
         >
-          <UploadCloud className="w-4 h-4" />
-          <span>Direct File Upload (MP3, WAV, M4A, MP4)</span>
+          <UploadCloud className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <span className="sm:hidden">File Upload</span>
+          <span className="hidden sm:inline">Direct File Upload (MP3, WAV, MP4)</span>
         </button>
 
         {/* Demo Cap Badge */}
-        <div className="hidden sm:flex items-center px-3 py-2 bg-amber-50/90 border border-amber-200/80 rounded-xl text-[11px] font-semibold text-amber-800 whitespace-nowrap">
+        <div className="hidden md:flex items-center px-3 py-2 bg-amber-50/90 border border-amber-200/80 rounded-xl text-[11px] font-semibold text-amber-800 whitespace-nowrap">
           <Clock className="w-3.5 h-3.5 mr-1 text-amber-600" />
           <span>Cap: Max 10 Mins</span>
         </div>
@@ -179,17 +181,17 @@ export const MediaInput: React.FC<MediaInputProps> = ({
             type="button"
             onClick={handleClearAll}
             disabled={isLoading}
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50/80 border border-gray-200 hover:border-red-200 transition-all disabled:opacity-50"
+            className="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-3 py-2 rounded-xl text-[11px] font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50/80 border border-gray-200 hover:border-red-200 transition-all disabled:opacity-50"
             title="Clear all inputs and results"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Clear</span>
+            <span className="hidden sm:inline">Clear</span>
           </button>
         )}
       </div>
 
       {validationError && (
-        <div className="mx-6 mt-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start space-x-2.5 animate-fadeIn">
+        <div className="mx-4 sm:mx-6 mt-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start space-x-2.5 animate-fadeIn">
           <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold mb-0.5">Demo Duration Limit</p>
@@ -198,7 +200,7 @@ export const MediaInput: React.FC<MediaInputProps> = ({
         </div>
       )}
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Tab 1: URL Input */}
         {activeTab === "url" && (
           <form onSubmit={handleUrlSubmit} className="space-y-4">
@@ -206,17 +208,17 @@ export const MediaInput: React.FC<MediaInputProps> = ({
               <label htmlFor="media-url" className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
                 Paste Public Audio or Media Link (Podcast, Stream, Cloud URL)
               </label>
-              <div className="relative flex items-center">
-                <input
-                  id="media-url"
-                  type="url"
-                  disabled={isLoading}
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="https://example.com/interview.mp3 or https://cdn.com/audio.wav"
-                  className="w-full px-4 py-3.5 pr-36 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-whip-500 focus:border-transparent transition-all placeholder:text-gray-400 font-mono disabled:opacity-60"
-                />
-                <div className="absolute right-2 flex items-center space-x-1.5">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <input
+                    id="media-url"
+                    type="url"
+                    disabled={isLoading}
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    placeholder="https://example.com/interview.mp3 or https://cdn.com/audio.wav"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-whip-500 focus:border-transparent transition-all placeholder:text-gray-400 font-mono disabled:opacity-60 pr-10"
+                  />
                   {urlInput && !isLoading && (
                     <button
                       type="button"
@@ -224,21 +226,21 @@ export const MediaInput: React.FC<MediaInputProps> = ({
                         setUrlInput("");
                         setValidationError(null);
                       }}
-                      className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-all"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-all"
                       title="Clear URL"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4" />
                     </button>
                   )}
-                  <button
-                    type="submit"
-                    disabled={isLoading || !urlInput.trim()}
-                    className="px-4 py-2 rounded-lg bg-whip-700 hover:bg-whip-800 text-white text-xs font-semibold shadow-md shadow-whip-700/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1.5 transition-all"
-                  >
-                    <span>Process</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
+                <button
+                  type="submit"
+                  disabled={isLoading || !urlInput.trim()}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl bg-whip-700 hover:bg-whip-800 text-white text-xs font-bold shadow-md shadow-whip-700/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5 transition-all shrink-0"
+                >
+                  <span>Process Audio</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
               <p className="text-[11px] text-gray-500 mt-2 leading-relaxed">
                 <strong className="text-whip-800">Supported:</strong> Any publicly accessible audio or video stream (.mp3, .wav, .m4a, .mp4, .webm). For private local files, use the <strong>Direct File Upload</strong> tab.

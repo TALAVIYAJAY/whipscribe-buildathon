@@ -239,32 +239,38 @@ export const SampleScenarios: React.FC<SampleScenariosProps> = ({
         </div>
 
         {/* Vector Toggle Buttons */}
-        <div className="flex items-center bg-gray-100/80 p-1 rounded-xl border border-gray-200 self-start md:self-auto">
+        <div className="grid grid-cols-2 w-full sm:w-auto sm:flex items-center bg-gray-100/80 p-1 rounded-xl border border-gray-200 shrink-0">
           <button
             type="button"
             disabled={isLoading}
             onClick={() => setActiveTab("direct")}
-            className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
+            className={`flex items-center justify-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
               activeTab === "direct"
                 ? "bg-white text-whip-800 shadow-sm border border-gray-100"
                 : "text-gray-500 hover:text-gray-900"
             }`}
           >
-            <HardDrive className="w-3.5 h-3.5" />
-            <span>Direct Upload (3 Files)</span>
+            <HardDrive className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              <span className="sm:hidden">Direct (3)</span>
+              <span className="hidden sm:inline">Direct Upload (3 Files)</span>
+            </span>
           </button>
           <button
             type="button"
             disabled={isLoading}
             onClick={() => setActiveTab("gdrive")}
-            className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
+            className={`flex items-center justify-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3.5 py-2 rounded-lg text-xs font-bold transition-all disabled:opacity-50 ${
               activeTab === "gdrive"
                 ? "bg-white text-amber-700 shadow-sm border border-gray-100"
                 : "text-gray-500 hover:text-gray-900"
             }`}
           >
-            <Cloud className="w-3.5 h-3.5" />
-            <span>Google Drive (3 Files)</span>
+            <Cloud className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              <span className="sm:hidden">Drive (3)</span>
+              <span className="hidden sm:inline">Google Drive (3 Files)</span>
+            </span>
           </button>
         </div>
       </div>
