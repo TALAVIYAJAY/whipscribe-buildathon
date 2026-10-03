@@ -30,7 +30,15 @@ export const Header: React.FC<HeaderProps> = ({ airtableBaseId = "appx2rQXn4238e
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
+          <a
+            href="/reader"
+            className="inline-flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all"
+            title="Open UI Challenge 01 Mobile Reader Prototype"
+          >
+            <span>📱 Mobile Reader Pass</span>
+          </a>
+
           <div className="inline-flex items-center space-x-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 shadow-sm">
             <Database className="w-3.5 h-3.5 text-emerald-600" />
             <span>Airtable Connected</span>
