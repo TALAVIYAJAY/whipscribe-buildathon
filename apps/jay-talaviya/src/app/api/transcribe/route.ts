@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WhipScribeClient, WhipScribeError } from "@/lib/whipscribe";
-import { extractIntelligence } from "@/lib/intelligence";
+import { extractIntelligence, normalizeTranscriptDiarization } from "@/lib/intelligence";
 import { extractIntelligenceWithGemini } from "@/lib/gemini";
 import { extractGoogleDriveId, validateMediaUrlBeforeIntake } from "@/lib/media-validator";
 
@@ -112,7 +112,8 @@ export async function POST(req: NextRequest) {
     await client.waitForJobCompletion(jobId, undefined, 240);
 
     // Fetch full transcript with speaker diarization and word timestamps
-    const transcript = await client.getTranscript(jobId);
+    const rawTranscript = await client.getTranscript(jobId);
+    const transcript = normalizeTranscriptDiarization(rawTranscript);
 
     // Enforce 10-minute demo limit (600s + 30s grace buffer) to conserve processing credits
     const segments = transcript.segments || [];

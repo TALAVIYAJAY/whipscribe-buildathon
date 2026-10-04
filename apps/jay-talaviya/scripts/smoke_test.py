@@ -18,15 +18,19 @@ ENV_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 def load_env() -> dict[str, str]:
     """Read all key-values from .env file."""
     env = {}
-    if not os.path.exists(ENV_FILE_PATH):
-        return env
-
-    with open(ENV_FILE_PATH, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                key, val = line.split("=", 1)
-                env[key.strip()] = val.strip().strip('"').strip("'")
+    paths = [
+        ENV_FILE_PATH,
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env.local"),
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            with open(p, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        key, val = line.split("=", 1)
+                        if key.strip() not in env:
+                            env[key.strip()] = val.strip().strip('"').strip("'")
     return env
 
 

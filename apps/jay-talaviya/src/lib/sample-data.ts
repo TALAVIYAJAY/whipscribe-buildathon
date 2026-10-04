@@ -267,6 +267,38 @@ export const SAMPLE_INTELLIGENCE: ExtractedIntelligence = {
         note: "Final sign-off on Airtable schema and commitment to deploy to Vercel by Friday",
       },
     ],
+    discussionPhases: [
+      {
+        phase: "PHASE 01",
+        title: "Aligning on Audio Intelligence",
+        timeRange: "00:00 - 00:15",
+        startSeconds: 0,
+        endSeconds: 15,
+        speaker: "SPEAKER_00",
+        outcome: "Framed core problem: unstructured audio into structured Airtable intelligence.",
+        status: "Complete",
+      },
+      {
+        phase: "PHASE 02",
+        title: "WhipScribe Diarization Architecture",
+        timeRange: "00:19 - 00:32",
+        startSeconds: 19,
+        endSeconds: 32,
+        speaker: "SPEAKER_01",
+        outcome: "Confirmed REST API pipeline for speaker diarization and word timestamps.",
+        status: "Deliberated",
+      },
+      {
+        phase: "PHASE 03",
+        title: "Interactive Seeking & Friday Deploy",
+        timeRange: "00:32 - 00:53",
+        startSeconds: 32,
+        endSeconds: 53,
+        speaker: "SPEAKER_01",
+        outcome: "Locked decision on timestamp audio seeking and Friday production deployment.",
+        status: "Consensus",
+      },
+    ],
     decisionMatrix: {
       confirmedDecisions: [
         "Use WhipScribe API for speaker diarization and word-level timestamp extraction",

@@ -103,6 +103,8 @@ export class WhipScribeClient {
       body: JSON.stringify({
         url,
         language,
+        diarize: true,
+        word_timestamps: true,
         source: "url",
       }),
     });
@@ -127,6 +129,9 @@ export class WhipScribeClient {
     const blob = fileBuffer instanceof Blob ? fileBuffer : new Blob([new Uint8Array(fileBuffer)], { type: mimeType });
     formData.append("file", blob, fileName);
     formData.append("language", language);
+    formData.append("diarize", "true");
+    formData.append("word_timestamps", "true");
+    formData.append("source", "upload");
 
     const res = await fetch(`${WHIPSCRIBE_BASE_URL}/transcribe`, {
       method: "POST",

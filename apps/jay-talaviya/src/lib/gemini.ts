@@ -11,6 +11,7 @@ import {
   SpeakerDynamic,
   SentimentMoment,
   formatSeconds,
+  normalizeTranscriptDiarization,
 } from "./intelligence";
 import { WhipScribeTranscriptResult } from "./whipscribe";
 
@@ -204,13 +205,15 @@ async function callGeminiApi(
  * and comprehensive behavioral meeting analytics extraction.
  */
 export async function extractIntelligenceWithGemini(
-  transcript: WhipScribeTranscriptResult,
+  rawTranscript: WhipScribeTranscriptResult,
   fallbackTitle: string = "Audio Intelligence Brief"
 ): Promise<ExtractedIntelligence | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return null;
   }
+
+  const transcript = normalizeTranscriptDiarization(rawTranscript);
 
   const primaryModel = process.env.GEMINI_PRIMARY_MODEL || "gemini-3.5-flash-lite";
   const backupModel = process.env.GEMINI_BACKUP_MODEL || "gemini-3.5-flash";
@@ -276,8 +279,8 @@ You MUST return ONLY a strictly valid JSON object matching this exact schema (no
   "key_moments": [
     {
       "timestamp": "MM:SS",
-      "speaker": "SPEAKER_XX",
-      "topic": "Topic milestone (e.g. Architecture Pivot, Pricing Agreement, Root Cause)",
+      "speaker": "Speaker Name",
+      "topic": "Concise milestone label (e.g. Architecture Pivot, Pipeline Status, Staging Deployment, Airtable Schema Verification)",
       "quote": "Exact verbatim quote from the transcript",
       "significance": "Why this specific statement was pivotal to the outcome of the discussion"
     }
@@ -460,6 +463,41 @@ STRICT QUALITY RULES:
           });
         }
 
+        // Ensure all important timestamps (decisions, deliverables, key questions) are captured
+        const segs = transcript.segments || [];
+        const actionDecisionRegex = /\b(will|should|need to|must|deploy|decided|agreed|confirm|latency|bottleneck|retention|invite|schema|sync|pipeline)\b/i;
+        segs.forEach((seg, sIdx) => {
+          const text = seg.text.trim();
+          if (!text || text.length < 15) return;
+          const isImp = sIdx === 0 || sIdx === segs.length - 1 || text.includes("?") || actionDecisionRegex.test(text);
+          if (isImp) {
+            const alreadyCaptured = keyMoments.some(
+              (km) => Math.abs(km.seconds - seg.start) < 2.5 || km.quote.toLowerCase().includes(text.toLowerCase().slice(0, 25))
+            );
+            if (!alreadyCaptured) {
+              keyMoments.push({
+                seconds: Math.round(seg.start),
+                timestamp: formatSeconds(seg.start),
+                speaker: seg.speaker || "Speaker",
+                topic: text.includes("?")
+                  ? "Critical Inquiry"
+                  : actionDecisionRegex.test(text)
+                  ? "Key Commitment & Deliverable"
+                  : sIdx === 0
+                  ? "Discussion Kickoff"
+                  : "Meeting Consensus",
+                quote: text,
+                significance: text.includes("?")
+                  ? "Outlined key operational requirement and team dependency."
+                  : "Establishes confirmed consensus, timeline milestone, or owner.",
+              });
+            }
+          }
+        });
+
+        // Chronologically order all pivotal moments
+        keyMoments.sort((a, b) => a.seconds - b.seconds);
+
         // Parse and validate Meeting Analytics
         const rawAnalytics = parsed.analytics;
         const rawHealth = Number(rawAnalytics?.health_score);
@@ -477,7 +515,15 @@ STRICT QUALITY RULES:
         const speakingPaceWpm = !isNaN(rawWpm) && rawWpm > 0 ? Math.min(220, Math.max(90, Math.round(rawWpm))) : 142;
         const paceLabel = rawAnalytics?.pace_label?.trim() || (speakingPaceWpm > 165 ? "Rapid" : speakingPaceWpm < 120 ? "Deliberate" : "Optimal");
 
-        // Speaker dynamics validation
+        // Speaker dynamics validation & synchronization with diarized segments
+        const segSpeakers = Array.from(
+          new Set(
+            (transcript.segments || [])
+              .map((s) => s.speaker)
+              .filter((spk): spk is string => Boolean(spk && spk !== "null" && spk !== "Speaker"))
+          )
+        );
+
         const speakerDynamics: SpeakerDynamic[] = [];
         if (Array.isArray(rawAnalytics?.speaker_dynamics) && rawAnalytics.speaker_dynamics.length > 0) {
           rawAnalytics.speaker_dynamics.forEach((sd) => {
@@ -493,20 +539,29 @@ STRICT QUALITY RULES:
           });
         }
 
-        // If Gemini omitted speaker dynamics, derive fallback from transcript segments
-        if (speakerDynamics.length === 0) {
+        // If Gemini omitted speaker dynamics or returned single/generic speaker while transcript has distinct speakers:
+        if (
+          speakerDynamics.length === 0 ||
+          (segSpeakers.length >= 2 &&
+            (speakerDynamics.length < 2 ||
+              speakerDynamics.every((sd) => sd.speaker.startsWith("SPEAKER_") || sd.speaker === "Speaker")))
+        ) {
+          speakerDynamics.length = 0; // Clear and compute directly from ground-truth segments
           const segs = transcript.segments || [];
-          const speakerSet = new Set<string>();
-          segs.forEach((s) => speakerSet.add(s.speaker || "Speaker 1"));
-          const speakers = Array.from(speakerSet);
-          const perShare = Math.round(100 / (speakers.length || 1));
-          speakers.forEach((spk, idx) => {
+          const totalWords =
+            segs.reduce((acc, s) => acc + s.text.split(/\s+/).filter(Boolean).length, 0) || 1;
+
+          const targetSpeakers = segSpeakers.length > 0 ? segSpeakers : ["Presenter"];
+          targetSpeakers.forEach((spk, idx) => {
+            const spkSegs = segs.filter((s) => s.speaker === spk);
+            const spkWords = spkSegs.reduce((acc, s) => acc + s.text.split(/\s+/).filter(Boolean).length, 0);
+            const share = Math.min(95, Math.max(5, Math.round((spkWords / totalWords) * 100)));
             speakerDynamics.push({
               speaker: spk,
-              sharePercent: idx === 0 ? 100 - perShare * (speakers.length - 1) : perShare,
-              turnCount: Math.max(2, Math.round(segs.filter((s) => s.speaker === spk).length)),
-              wordCount: 250,
-              role: idx === 0 ? "Lead / Decision Maker" : "Technical Contributor",
+              sharePercent: targetSpeakers.length === 1 ? 100 : share,
+              turnCount: Math.max(1, spkSegs.length),
+              wordCount: Math.max(20, spkWords),
+              role: idx === 0 ? "Lead / Primary Speaker" : "Technical Collaborator",
             });
           });
         }

@@ -32,8 +32,8 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
   transcript,
   onSeek,
 }) => {
-  // 3-Tab Executive Navigation: Intelligence Brief vs. Health Suite vs. Diarized Transcript
-  const [activeTab, setActiveTab] = useState<"brief" | "analytics" | "transcript">("brief");
+  // 3-Tab Executive Navigation: Health Suite (Default) vs. Intelligence Brief vs. Diarized Transcript
+  const [activeTab, setActiveTab] = useState<"analytics" | "brief" | "transcript">("analytics");
   const [copied, setCopied] = useState(false);
   const [copiedSegmentIdx, setCopiedSegmentIdx] = useState<number | null>(null);
 
@@ -63,10 +63,19 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
   const uniqueSpeakers = useMemo(() => {
     const speakers = new Set<string>();
     (transcript.segments || []).forEach((s) => {
-      if (s.speaker) speakers.add(s.speaker);
+      if (s.speaker && s.speaker !== "null" && s.speaker !== "Speaker" && s.speaker.trim()) {
+        speakers.add(s.speaker.trim());
+      }
     });
+    if (speakers.size === 0 && intelligence.analytics?.speakerDynamics) {
+      intelligence.analytics.speakerDynamics.forEach((sd) => {
+        if (sd.speaker && sd.speaker !== "null" && sd.speaker !== "Speaker" && sd.speaker.trim()) {
+          speakers.add(sd.speaker.trim());
+        }
+      });
+    }
     return Array.from(speakers);
-  }, [transcript.segments]);
+  }, [transcript.segments, intelligence.analytics?.speakerDynamics]);
 
   // Filtered transcript turns
   const filteredSegments = useMemo(() => {
@@ -142,57 +151,60 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
         </button>
       </div>
 
-      {/* Streamlined 3-Tab Executive Navigation */}
+      {/* Streamlined 3-Tab Executive Navigation: Analytics is Leftmost (First) */}
       <div className="flex border-b border-gray-100 px-3 sm:px-6 gap-2 sm:gap-6 bg-slate-50/50 overflow-x-auto no-scrollbar">
-        <button
-          type="button"
-          onClick={() => setActiveTab("brief")}
-          className={`flex items-center space-x-1.5 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
-            activeTab === "brief"
-              ? "border-whip-700 text-whip-800"
-              : "border-transparent text-gray-500 hover:text-gray-900"
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-whip-700 shrink-0" />
-          <span className="sm:hidden">Executive Brief</span>
-          <span className="hidden sm:inline">Executive Intelligence Brief</span>
-          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-whip-100 text-whip-800 border border-whip-200 hidden md:inline">
-            Unified View
-          </span>
-        </button>
-
+        {/* TAB 1: Meeting Health & Diagram Analytics (Default) */}
         <button
           type="button"
           onClick={() => setActiveTab("analytics")}
           className={`flex items-center space-x-1.5 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
             activeTab === "analytics"
-              ? "border-emerald-600 text-emerald-800"
+              ? "border-whip-700 text-whip-900"
               : "border-transparent text-gray-500 hover:text-gray-900"
           }`}
         >
-          <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
+          <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-whip-700 shrink-0" />
           <span className="sm:hidden">Health & Analytics</span>
-          <span className="hidden sm:inline">Meeting Health & Analytics</span>
+          <span className="hidden sm:inline">Meeting Health & Diagram Analytics</span>
           {analytics && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
               {analytics.healthScore}/100
             </span>
           )}
         </button>
 
+        {/* TAB 2: Executive Intelligence Brief */}
+        <button
+          type="button"
+          onClick={() => setActiveTab("brief")}
+          className={`flex items-center space-x-1.5 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
+            activeTab === "brief"
+              ? "border-whip-700 text-whip-900"
+              : "border-transparent text-gray-500 hover:text-gray-900"
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 shrink-0" />
+          <span className="sm:hidden">Executive Brief</span>
+          <span className="hidden sm:inline">Executive Intelligence Brief</span>
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 hidden md:inline">
+            Summary
+          </span>
+        </button>
+
+        {/* TAB 3: Full Diarized Transcript */}
         <button
           type="button"
           onClick={() => setActiveTab("transcript")}
           className={`flex items-center space-x-1.5 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
             activeTab === "transcript"
-              ? "border-purple-600 text-purple-800"
+              ? "border-whip-700 text-whip-900"
               : "border-transparent text-gray-500 hover:text-gray-900"
           }`}
         >
-          <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 shrink-0" />
+          <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 shrink-0" />
           <span className="sm:hidden">Transcript</span>
           <span className="hidden sm:inline">Full Diarized Transcript</span>
-          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">
             {transcript.segments?.length || 0}
           </span>
         </button>
@@ -475,13 +487,6 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
             transcript={transcript}
             onSeek={(seconds) => {
               if (onSeek) onSeek(seconds);
-              setActiveTab("transcript");
-              const targetSeg = transcript.segments?.find(
-                (s) => s.start <= seconds && s.end >= seconds
-              );
-              if (targetSeg) {
-                setTranscriptSearch(targetSeg.text.slice(0, 25));
-              }
             }}
           />
         )}
