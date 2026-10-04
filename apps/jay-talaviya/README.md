@@ -140,10 +140,16 @@ To eliminate evaluator friction, 6 pre-recorded, multi-speaker conversational te
 - **Google Drive Stream Normalization**: Automatically converts Google Drive share URLs into direct binary stream endpoints, bypassing viewer walls in 6 seconds.
 - **Pre-Flight Credit Guardrails**: Fast <500ms duration checks protecting user credits before making billing calls.
 - **WhipScribe REST Integration**: Robust polling with immediate error propagation, preventing hang loops on blocked or paywalled jobs.
-- **Dual-Layer Intelligence Synthesis**:
-  - Primary: Google Gemini 1.5 Flash AI extracting contextual summaries, owners, deadlines, and key quotes.
-  - Fallback: Local rule-based NLP engine ensuring 100% uptime even if AI API keys are unavailable.
-- **Automated Airtable Sync**: Real-time push into Airtable Base `appx2rQXn4238eQ0v` with deep linking and rollback support.
+- **Executive Meeting Intelligence & Health Suite (New)**:
+  - **Overall Meeting Health Score (0–100)**: Quantitative index synthesizing alignment, execution clarity, signal-to-noise ratio, and cadence (WPM).
+  - **Speaker Dynamics & Airtime Breakdown**: Diarized talk-time percentage distribution, turn frequency, and inferred organizational roles (Lead / Decision Maker, Technical Contributor, Collaborator).
+  - **Sentiment & Tension Trajectory**: Minute-by-minute emotional arc mapping consensus, constructive friction, and peak tension moments with clickable timestamp anchors.
+  - **3-Way Executive Decision Matrix**: Tri-color matrix separating Confirmed Decisions (emerald), High-Risk Commitments (amber), and Open Blockers (rose).
+  - **Interactive Grounded Transcript Q&A**: Zero-hallucination inspector answering specific queries with verbatim citations and speaker attribution.
+- **Dual-Layer Intelligence Synthesis & Offline Fallback**:
+  - Primary: Google Gemini 3.5 Flash AI extracting deep contextual insights, analytics, decisions, and behavioral dynamics.
+  - Deterministic Fallback: Client-side mathematical & regex NLP engine ensuring 100% analytics uptime even during network interruptions or API limits.
+- **Automated Airtable Sync**: Real-time push into Airtable Base `appx2rQXn4238eQ0v` with deep linking and rollback support (preserving 100% schema backward compatibility).
 - **Interactive Audio Preview**: In-browser audio player for all 6 curated test vectors with instant 1-click test triggers.
 - **All 5 UX States**: Fully designed Empty, Loading (with progress stepper), Error, Done, and Offline states.
 

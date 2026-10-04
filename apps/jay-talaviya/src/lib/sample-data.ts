@@ -222,6 +222,65 @@ export const SAMPLE_INTELLIGENCE: ExtractedIntelligence = {
       quote: "We need to finalize the Airtable schema and deploy to Vercel by Friday.",
     },
   ],
+  analytics: {
+    healthScore: 92,
+    efficiencyLevel: "High Execution",
+    signalToNoiseRatio: "88% Actionable",
+    speakingPaceWpm: 146,
+    paceLabel: "Optimal",
+    speakerDynamics: [
+      {
+        speaker: "SPEAKER_00",
+        sharePercent: 36,
+        turnCount: 2,
+        wordCount: 78,
+        role: "Meeting Facilitator / Host",
+      },
+      {
+        speaker: "SPEAKER_01",
+        sharePercent: 64,
+        turnCount: 2,
+        wordCount: 142,
+        role: "Lead Systems Architect",
+      },
+    ],
+    sentimentTimeline: [
+      {
+        timestamp: "00:00",
+        seconds: 0,
+        phase: "Kickoff & Alignment",
+        sentiment: "Positive",
+        note: "Welcoming team and setting core objective for audio-to-Airtable pipeline",
+      },
+      {
+        timestamp: "00:19",
+        seconds: 19,
+        phase: "Core Architecture Review",
+        sentiment: "Neutral",
+        note: "Technical walkthrough of WhipScribe diarization and word timestamp seeking",
+      },
+      {
+        timestamp: "00:47",
+        seconds: 47,
+        phase: "Consensus & Action Commitments",
+        sentiment: "High Alignment",
+        note: "Final sign-off on Airtable schema and commitment to deploy to Vercel by Friday",
+      },
+    ],
+    decisionMatrix: {
+      confirmedDecisions: [
+        "Use WhipScribe API for speaker diarization and word-level timestamp extraction",
+        "Enable interactive seeking so clicking any timestamp jumps audio to that exact second",
+        "Target Friday deployment to Vercel production edge",
+      ],
+      highRiskCommitments: [
+        "Finalize 6-column Airtable schema without breaking backwards compatibility",
+      ],
+      openBlockers: [
+        "Verify public streaming support for Google Drive audio links prior to release",
+      ],
+    },
+  },
   airtablePayload: {
     summaryText:
       "• Core objective is transforming unstructured audio from meetings, user interviews, and lectures into structured Airtable intelligence.\n\n• Integrated directly with WhipScribe API for high-precision speaker diarization, word-level timestamps, and cloud-hosted audio playback.\n\n• Architecture connects transcript moments to an interactive media player that seeks directly to quoted timestamps.\n\n• Target milestone is completing the Airtable synchronization schema and shipping the live deployment to Vercel.",

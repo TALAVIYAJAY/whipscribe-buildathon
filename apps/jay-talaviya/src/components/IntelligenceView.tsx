@@ -15,23 +15,32 @@ import {
   AlertCircle,
   Tag,
   ListTodo,
+  Activity,
 } from "lucide-react";
-import { ExtractedIntelligence, HighlightMoment } from "@/lib/intelligence";
+import { ExtractedIntelligence, HighlightMoment, extractIntelligence } from "@/lib/intelligence";
 import { WhipScribeTranscriptResult } from "@/lib/whipscribe";
+import { AnalyticsSuiteView } from "@/components/AnalyticsSuiteView";
 
 interface IntelligenceViewProps {
   intelligence: ExtractedIntelligence;
   transcript: WhipScribeTranscriptResult;
+  onSeek?: (seconds: number) => void;
 }
 
 export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
   intelligence,
   transcript,
+  onSeek,
 }) => {
-  // Clean 2-Tab Navigation: Executive Intelligence Brief vs. Full Diarized Transcript
-  const [activeTab, setActiveTab] = useState<"brief" | "transcript">("brief");
+  // 3-Tab Executive Navigation: Intelligence Brief vs. Health Suite vs. Diarized Transcript
+  const [activeTab, setActiveTab] = useState<"brief" | "analytics" | "transcript">("brief");
   const [copied, setCopied] = useState(false);
   const [copiedSegmentIdx, setCopiedSegmentIdx] = useState<number | null>(null);
+
+  // Guarantee analytics is available through deterministic fallback if not populated by Gemini
+  const analytics = useMemo(() => {
+    return intelligence.analytics || extractIntelligence(transcript, intelligence.title).analytics;
+  }, [intelligence, transcript]);
 
   // Transcript tab search & filter controls
   const [transcriptSearch, setTranscriptSearch] = useState("");
@@ -133,12 +142,12 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
         </button>
       </div>
 
-      {/* Streamlined 2-Tab Navigation */}
-      <div className="flex border-b border-gray-100 px-3 sm:px-6 gap-2 sm:gap-8 bg-slate-50/50 overflow-x-auto no-scrollbar">
+      {/* Streamlined 3-Tab Executive Navigation */}
+      <div className="flex border-b border-gray-100 px-3 sm:px-6 gap-2 sm:gap-6 bg-slate-50/50 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setActiveTab("brief")}
-          className={`flex items-center space-x-1.5 sm:space-x-2.5 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
+          className={`flex items-center space-x-1.5 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
             activeTab === "brief"
               ? "border-whip-700 text-whip-800"
               : "border-transparent text-gray-500 hover:text-gray-900"
@@ -154,10 +163,29 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
 
         <button
           type="button"
+          onClick={() => setActiveTab("analytics")}
+          className={`flex items-center space-x-1.5 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
+            activeTab === "analytics"
+              ? "border-emerald-600 text-emerald-800"
+              : "border-transparent text-gray-500 hover:text-gray-900"
+          }`}
+        >
+          <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
+          <span className="sm:hidden">Health & Analytics</span>
+          <span className="hidden sm:inline">Meeting Health & Analytics</span>
+          {analytics && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+              {analytics.healthScore}/100
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab("transcript")}
-          className={`flex items-center space-x-1.5 sm:space-x-2.5 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
+          className={`flex items-center space-x-1.5 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-0 text-xs font-bold border-b-2 transition-all whitespace-nowrap shrink-0 ${
             activeTab === "transcript"
-              ? "border-whip-700 text-whip-800"
+              ? "border-purple-600 text-purple-800"
               : "border-transparent text-gray-500 hover:text-gray-900"
           }`}
         >
@@ -438,7 +466,28 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
         )}
 
         {/* ======================================================== */}
-        {/* TAB 2: FULL DIARIZED TRANSCRIPT                          */}
+        {/* TAB 2: MEETING INTELLIGENCE & HEALTH SUITE               */}
+        {/* ======================================================== */}
+        {activeTab === "analytics" && analytics && (
+          <AnalyticsSuiteView
+            analytics={analytics}
+            intelligence={intelligence}
+            transcript={transcript}
+            onSeek={(seconds) => {
+              if (onSeek) onSeek(seconds);
+              setActiveTab("transcript");
+              const targetSeg = transcript.segments?.find(
+                (s) => s.start <= seconds && s.end >= seconds
+              );
+              if (targetSeg) {
+                setTranscriptSearch(targetSeg.text.slice(0, 25));
+              }
+            }}
+          />
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB 3: FULL DIARIZED TRANSCRIPT                          */}
         {/* ======================================================== */}
         {activeTab === "transcript" && (
           <div className="space-y-4">
