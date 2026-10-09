@@ -415,6 +415,7 @@ export const AnalyticsSuiteView: React.FC<AnalyticsSuiteViewProps> = ({
       return [
         {
           phase: "PHASE 01",
+          phaseName: intelligence.title || "Executive Briefing",
           title: intelligence.title || "Executive Briefing",
           timeRange: `00:00 - ${formatSeconds(totalDuration)}`,
           startSeconds: 0,
@@ -422,6 +423,8 @@ export const AnalyticsSuiteView: React.FC<AnalyticsSuiteViewProps> = ({
           speaker: "Presenter",
           outcome: intelligence.overview || "Recorded briefing completed.",
           status: "Complete",
+          frictionLevel: "low",
+          consensusReached: true,
         },
       ];
     }
@@ -485,6 +488,7 @@ export const AnalyticsSuiteView: React.FC<AnalyticsSuiteViewProps> = ({
 
       result.push({
         phase: `STAGE 0${pIdx + 1}`,
+        phaseName: title || `STAGE 0${pIdx + 1}`,
         title,
         timeRange: pTimeRange,
         startSeconds: Math.round(pStart),
@@ -492,6 +496,8 @@ export const AnalyticsSuiteView: React.FC<AnalyticsSuiteViewProps> = ({
         speaker: dominantSpeaker,
         outcome,
         status,
+        frictionLevel: (status === "Risk Review" ? "high" : pIdx === 0 ? "low" : "medium") as "low" | "medium" | "high",
+        consensusReached: status === "Consensus" || status === "Complete",
       });
     }
 

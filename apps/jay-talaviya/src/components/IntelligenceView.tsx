@@ -16,10 +16,18 @@ import {
   Tag,
   ListTodo,
   Activity,
+  Download,
+  Printer,
+  ChevronDown,
+  FileDown,
 } from "lucide-react";
 import { ExtractedIntelligence, HighlightMoment, extractIntelligence } from "@/lib/intelligence";
 import { WhipScribeTranscriptResult } from "@/lib/whipscribe";
 import { AnalyticsSuiteView } from "@/components/AnalyticsSuiteView";
+import {
+  generateExecutiveBriefingText,
+  exportBriefingToPdf,
+} from "@/lib/briefingExport";
 
 interface IntelligenceViewProps {
   intelligence: ExtractedIntelligence;
@@ -36,6 +44,25 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
   const [activeTab, setActiveTab] = useState<"analytics" | "brief" | "transcript">("analytics");
   const [copied, setCopied] = useState(false);
   const [copiedSegmentIdx, setCopiedSegmentIdx] = useState<number | null>(null);
+  const [copiedBriefing, setCopiedBriefing] = useState(false);
+  const [savedPdf, setSavedPdf] = useState(false);
+
+  const handleCopyBriefing = () => {
+    const text = generateExecutiveBriefingText(intelligence, transcript);
+    navigator.clipboard.writeText(text);
+    setCopiedBriefing(true);
+    setTimeout(() => setCopiedBriefing(false), 2200);
+  };
+
+  const handleSavePdf = () => {
+    try {
+      exportBriefingToPdf(intelligence, transcript);
+      setSavedPdf(true);
+      setTimeout(() => setSavedPdf(false), 2200);
+    } catch (e) {
+      console.error("PDF export error:", e);
+    }
+  };
 
   // Guarantee analytics is available through deterministic fallback if not populated by Gemini
   const analytics = useMemo(() => {
@@ -141,14 +168,45 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={copyToClipboard}
-          className="self-start md:self-auto inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 text-xs font-semibold shadow-xs transition-all shrink-0"
-        >
-          {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-gray-500" />}
-          <span>{copied ? "Copied All Briefing" : "Copy Complete Briefing"}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto shrink-0">
+          {/* 1. Copy Briefing Button (Primary 1-Click Clipboard) */}
+          <button
+            type="button"
+            onClick={handleCopyBriefing}
+            className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-whip-300 bg-whip-600 hover:bg-whip-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+          >
+            {copiedBriefing ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-300 stroke-[3]" />
+                <span>Copied Briefing!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                <span>Copy Briefing</span>
+              </>
+            )}
+          </button>
+
+          {/* 2. Save PDF Button (Direct 1-Click Browser Download) */}
+          <button
+            type="button"
+            onClick={handleSavePdf}
+            className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 text-xs font-bold shadow-xs transition-all cursor-pointer"
+          >
+            {savedPdf ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                <span>Saved PDF!</span>
+              </>
+            ) : (
+              <>
+                <FileDown className="w-4 h-4 text-gray-600" />
+                <span>Save PDF</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Streamlined 3-Tab Executive Navigation: Analytics is Leftmost (First) */}
@@ -305,13 +363,19 @@ export const IntelligenceView: React.FC<IntelligenceViewProps> = ({
               {/* Action Items */}
               <div className="space-y-2.5">
                 {intelligence.actionItems.map((action, idx) => {
-                  const cleanAction = action
-                    .replace(/^\[(UNRESOLVED\s*\/?\s*RISK|UNRESOLVED|RISK|DECISION|DIRECTION|AGREEMENT|ACTION|TASK)\]\s*/gi, "")
-                    .replace(/\[(HIGH|MEDIUM|LOW)\s*PRIORITY\]\s*/gi, "")
+                  const actionStr =
+                    typeof action === "string"
+                      ? action
+                      : `[${action.urgency?.toUpperCase() || "ACTION"}] ${action.assignee ? `[Owner: ${action.assignee}] ` : ""}${action.task}`;
+                  const cleanAction = actionStr
+                    .replace(/^\[(UNRESOLVED\s*\/?\s*RISK|UNRESOLVED|RISK|DECISION|DIRECTION|AGREEMENT|ACTION|TASK|HIGH|MEDIUM|LOW|URGENT|CRITICAL)\]\s*/gi, "")
+                    .replace(/\[(HIGH|MEDIUM|LOW)\s*(PRIORITY)?\]\s*/gi, "")
                     .replace(/\[Owner:\s*(Unassigned|Unknown|None)\]\s*/gi, "")
+                    .replace(/\[Owner:\s*([^\]]+)\]\s*/gi, "$1: ")
                     .replace(/\[Unassigned\]\s*/gi, "")
                     .replace(/^Unassigned:\s*/gi, "")
                     .replace(/\s*-\s*Unassigned$/gi, "")
+                    .replace(/^[✓•\s*-]+/, "")
                     .trim();
 
                   return (

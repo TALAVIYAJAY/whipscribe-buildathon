@@ -200,3 +200,64 @@ export async function validateMediaUrlBeforeIntake(
 
   return { valid: true };
 }
+
+/**
+ * Validates a local File object before uploading or processing
+ * Enforces:
+ * - Non-empty (size > 0 bytes)
+ * - Maximum file size 250MB to prevent browser crash and credit exhaustion
+ * - Supported audio extensions (.mp3, .wav, .m4a, .aac, .ogg, .flac, .mp4, .webm)
+ */
+export function validateMediaFile(file: { name?: string; size?: number; type?: string }): ValidationResult {
+  if (!file) {
+    return { valid: false, error: "No file provided for validation." };
+  }
+
+  // 1. Guard against empty 0-byte files
+  if (file.size === 0) {
+    return {
+      valid: false,
+      error: `The selected file "${file.name || "file"}" is empty (0 bytes). Please select a valid audio recording.`,
+    };
+  }
+
+  // 2. Guard against oversized files (> 250MB)
+  const maxBytes = 250 * 1024 * 1024;
+  if (typeof file.size === "number" && file.size > maxBytes) {
+    const mb = Math.round(file.size / (1024 * 1024));
+    return {
+      valid: false,
+      error: `File size (${mb}MB) exceeds the 250MB limit. To protect memory and credits, please select a smaller audio file.`,
+    };
+  }
+
+  // 3. Supported audio format validation
+  const fileName = (file.name || "").toLowerCase();
+  const validExtensions = [".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac", ".mp4", ".webm"];
+  const hasValidExt = validExtensions.some((ext) => fileName.endsWith(ext));
+
+  const validMimes = [
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/m4a",
+    "audio/x-m4a",
+    "audio/aac",
+    "audio/ogg",
+    "audio/flac",
+    "audio/webm",
+    "video/mp4",
+    "video/webm",
+  ];
+  const hasValidMime = file.type ? validMimes.includes(file.type.toLowerCase()) : false;
+
+  if (!hasValidExt && !hasValidMime) {
+    return {
+      valid: false,
+      error: `Unsupported file format for "${file.name || "file"}". Please select an audio file (.mp3, .wav, .m4a, .aac, .ogg, .flac).`,
+    };
+  }
+
+  return { valid: true };
+}

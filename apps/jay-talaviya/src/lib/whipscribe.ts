@@ -22,8 +22,9 @@ export interface WhipScribeSegment {
 
 export interface WhipScribeTranscriptResult {
   text: string;
-  language: string;
+  language?: string;
   segments: WhipScribeSegment[];
+  duration?: number;
   speech_detected?: boolean;
   speech_ratio?: number;
 }

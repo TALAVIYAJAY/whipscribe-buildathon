@@ -34,3 +34,24 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #a78bfa;
 }
+
+/* Print-optimized styling for Executive PDF Export */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  header, nav, .no-print, button, form, .no-print-area {
+    display: none !important;
+  }
+  .print-break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .shadow-xl, .shadow-lg, .shadow-md, .shadow-sm, .shadow-xs {
+    box-shadow: none !important;
+  }
+  .border {
+    border-color: #e5e7eb !important;
+  }
+}

@@ -609,12 +609,21 @@ STRICT QUALITY RULES:
             ? openQuestions
             : ["Confirm final stakeholder sign-off prior to production deployment."];
 
+        const pacingWPM = speakingPaceWpm;
+        const overallPacing = speakingPaceWpm > 165 ? "fast" : speakingPaceWpm < 120 ? "deliberate" : "moderate";
+        const alignmentScore = Math.min(98, Math.max(75, Math.round(healthScore * 0.96)));
+        const executionClarityScore = Math.min(96, Math.max(70, Math.round(healthScore * 0.93)));
+
         const analytics: MeetingAnalytics = {
           healthScore,
+          alignmentScore,
+          executionClarityScore,
           efficiencyLevel,
           signalToNoiseRatio,
           speakingPaceWpm,
+          pacingWPM,
           paceLabel,
+          overallPacing,
           speakerDynamics,
           sentimentTimeline,
           decisionMatrix: {
